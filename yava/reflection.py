@@ -47,6 +47,12 @@ check_essay_prompt = PromptTemplate.from_template(
 check_essay_model = VertexAI(model_name="gemini-1.5-flash-001")
 default_check_essay = check_essay_prompt | check_essay_model
 
+class ReflectionState(TypedDict):
+    final: str
+    previous: str
+    counter: int
+    messages: Annotated[AnyMessage, add_messages]
+
 
 def reflection(
     writer: RunnableSequence = default_writer,
@@ -55,13 +61,7 @@ def reflection(
     max_count: int = 25,
 ) -> StateGraph:
 
-    class State(TypedDict):
-        old_text: str
-        new_text: str
-        counter: int
-        messages: Annotated[AnyMessage, add_messages]
-
-    async def generation_node(state: State) -> State:
+    async def generation_node(state: ReflectionState) -> ReflectionState:
         if "counter" in state and state["counter"]:
             idx = state["counter"] + 1
         else:
@@ -70,13 +70,10 @@ def reflection(
         response = {}
         response["counter"] = idx
         response["messages"] = await writer.ainvoke(state["messages"])
-        if state["new_text"]:
-            response["old_text"] = state["new_text"]
-        response["new_text"] = response["messages"].content
 
         return response
 
-    async def reflection_node(state: State) -> State:
+    async def reflection_node(state: ReflectionState) -> ReflectionState:
         # Other messages we need to adjust
         cls_map = {"ai": HumanMessage, "human": AIMessage}
         # First message is the original user request. We hold it the same for all nodes
@@ -86,7 +83,13 @@ def reflection(
         ]
         res = await reviewer.ainvoke(translated)
         # We treat the output of this as human feedback for the generator
-        return {"messages": [HumanMessage(content=res.content)]}
+
+        response = {}
+        response['messages'] = [HumanMessage(content=res.content)]
+        if state["final"]:
+            response["previous_essay"] = state["final"]
+        response["final"] = state["messages"][-1].content
+        return response
 
     def is_essay(state):
         topic = state["messages"][0].content  # TOTO -> prerobit na topic
@@ -98,7 +101,7 @@ def reflection(
         else:
             return END
 
-    def check(state: State):
+    def check(state: ReflectionState) -> str:
         if "counter" not in state:
             state["counter"] = 1
 
@@ -107,7 +110,7 @@ def reflection(
         else:
             return "generate"
 
-    builder = StateGraph(State)
+    builder = StateGraph(ReflectionState)
     builder.add_node("generate", generation_node)
     builder.add_node("reflection", reflection_node)
     builder.add_edge(START, "generate")
