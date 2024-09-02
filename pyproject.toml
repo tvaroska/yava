@@ -8,15 +8,19 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
-vertexai = "1.60.0"
-langchain-core = "0.2.32"
-langchain-google-vertexai = "1.0.8"
-anthropic = {version = "0.34.0", extras = ["vertexai"]}
-
+vertexai = "1.64.0"
+langchain-core = "0.2.36"
+langchain-google-vertexai = "1.0.10"
+anthropic = {version = "0.34.1", extras = ["vertexai"]}
+langgraph = "0.2.14"
+datasets = "^2.21.0"
+gcsfs = "^2024.6.1"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.4"
 ipywidgets = "^8.1.3"
+black = "^24.8.0"
+isort = "^5.13.2"
 
 [build-system]
 requires = ["poetry-core"]
