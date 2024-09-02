@@ -14,13 +14,16 @@ from langchain_google_vertexai import ChatVertexAI, VertexAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 
+from .prompts import prompts
+
 writer_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            " Generate the best essay possible for the user`s request."
-            "You are an essay assistant tasked with writing excellent 5-paragraph essays."
-            " If the user provides critique, respond with a new essay improved on feedback.",
+            prompts.prompts['reflection/writer'].prompt
+            # " Generate the best essay possible for the user`s request."
+            # "You are an essay assistant tasked with writing excellent 5-paragraph essays."
+            # " If the user provides critique, respond with a new essay improved on feedback.",
         ),
         MessagesPlaceholder(variable_name="messages"),
     ]
@@ -32,8 +35,9 @@ reviewer_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a teacher grading an essay submission. Generate critique and recommendations for the user's submission."
-            " Provide detailed recommendations, including requests for length, depth, style, etc.",
+            prompts.prompts['reflection/reviewer'].prompt
+            # "You are a teacher grading an essay submission. Generate critique and recommendations for the user's submission."
+            # " Provide detailed recommendations, including requests for length, depth, style, etc.",
         ),
         MessagesPlaceholder(variable_name="messages"),
     ]
@@ -42,7 +46,9 @@ reviewer_model = ChatVertexAI(model="gemini-1.5-pro-001")
 default_reviewer = reviewer_prompt | reviewer_model
 
 check_essay_prompt = PromptTemplate.from_template(
-    "Check if the text is essay on {topic}.<TEXT>{essay}</TEXT>. Respond with Yes/No"
+    prompts.prompts['reflection/check'].prompt
+
+#     "Check if the text is essay on {topic}.<TEXT>{essay}</TEXT>. Respond with Yes/No"
 )
 check_essay_model = VertexAI(model_name="gemini-1.5-flash-001")
 default_check_essay = check_essay_prompt | check_essay_model
@@ -85,9 +91,9 @@ def reflection(
         # We treat the output of this as human feedback for the generator
 
         response = {}
-        response['messages'] = [HumanMessage(content=res.content)]
+        response["messages"] = [HumanMessage(content=res.content)]
         if state["final"]:
-            response["previous_essay"] = state["final"]
+            response["previous"] = state["final"]
         response["final"] = state["messages"][-1].content
         return response
 
