@@ -1,3 +1,12 @@
+"""
+
+    Collection of utilities
+
+    xmlfind -> extract text in XML tags
+
+"""
+
+
 import re
 
 def xmlfind(text, tag):
@@ -12,7 +21,9 @@ def xmlfind(text, tag):
     """
     rx = f'<{tag}>(.*?)</{tag}>'
 
-    response = re.search(rx, text, re.DOTALL).group()
-    response = response.strip(f'<{tag}>').strip(f'</{tag}>')
-    
-    return response
+    response = re.findall(rx, text, re.DOTALL)
+
+    if len(response) == 1:
+        return response[0]
+    else:
+        return response
