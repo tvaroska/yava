@@ -9,7 +9,7 @@ import asyncio
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.chat_models import ChatLiteLLMRouter
 
-from yava.models import router
+from yava.models import flash
 from yava.tools import xmlfind
 from yava.prompts import prompts
 
@@ -18,7 +18,7 @@ planning_prompt = ChatPromptTemplate([
         ("user", "{user_query}")
     ])
 
-planning_model = ChatLiteLLMRouter(router=router, model_name="gemini-1.5-flash")
+planning_model = ChatLiteLLMRouter(router=flash)
 planning_chain = planning_prompt | planning_model
 
 async def generate_plans(user_query, n=5, chain=planning_chain):
