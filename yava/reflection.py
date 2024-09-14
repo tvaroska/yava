@@ -17,6 +17,7 @@ from langchain_google_vertexai import ChatVertexAI, VertexAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
+from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from .prompts import prompts
 
@@ -52,6 +53,7 @@ class ReflectionState(TypedDict):
     format: str
     topic: str
     context: str
+    context_mime: str
     messages: Annotated[AnyMessage, add_messages]
 
 
@@ -80,6 +82,7 @@ class Reflection(CompiledStateGraph):
         reviewer: RunnableSequence = default_reviewer,
         check_essay: RunnableSequence = default_check_essay,
         max_count: int = 5,
+        memory: BaseCheckpointSaver = None,
     ):
 
         async def initialize(state: ReflectionState) -> ReflectionState:
@@ -93,24 +96,39 @@ class Reflection(CompiledStateGraph):
             else:
                 document_format = state["format"]
 
+            message = f"Write an {document_format}"
             if "topic" not in state:
-                raise ValueError()
+                message = message + "."
             else:
                 topic = state["topic"]
+                message = message + f" about {topic}"
 
-            message = f"Write an {document_format} about {topic}."
 
             if "context" in state:
-                message = (
-                    message
-                    + f'\nAdditional context for your writing: f{state["context"]}'
-                )
+                if "context_mime" in state:
+                    message = HumanMessage(
+                        content=[
+                            {"type": "text", "text": message},
+                            {
+                                "type": "media",
+                                "mime_type": state["context_mime"],
+                                "data": state["context"],
+                            },
+                        ]
+                    )
+                    response['messages'] = [message]
+                else:
+                    message = (
+                        message
+                        + f'\nAdditional context for your writing: {state["context"]}'
+                    )
 
-            response["messages"] = [HumanMessage(message)]
+                    response["messages"] = [HumanMessage(message)]
 
             return response
 
         async def generation_node(state: ReflectionState) -> ReflectionState:
+        
             if "counter" in state and state["counter"]:
                 idx = state["counter"] + 1
             else:
@@ -175,6 +193,6 @@ class Reflection(CompiledStateGraph):
 
         builder.add_conditional_edges("generate", is_essay)
         builder.add_conditional_edges("reflection", check)
-        graph = builder.compile()
+        graph = builder.compile(checkpointer=memory)
 
         return graph
