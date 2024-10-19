@@ -8,16 +8,15 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
-vertexai = "1.64.0"
-langchain-core = "0.2.38"
-langchain-google-vertexai = "1.0.10"
-anthropic = {version = "0.34.1", extras = ["vertexai"]}
-langgraph = "0.2.14"
-datasets = "^2.21.0"
-gcsfs = "^2024.6.1"
+langchain-core = ">=0.3.0,<0.4.0"
+langchain-community = ">=0.3.0,<0.4.0"
+langgraph = ">=0.2.21"
+vertexai = ">=1.66.0"
+langchain-google-vertexai = ">=2.0.0"
 promptgit = {git = "git@github.com:tvaroska/promptgit.git"}
-litellm = "1.44.22"
-langchain-community = "0.2.16"
+google-cloud-storage = "^2.18.2"
+python-dateutil = ">=2.9.0"
+tqdm = "^4.66.5"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = ">=4.2.4"
