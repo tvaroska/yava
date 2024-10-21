@@ -12,12 +12,12 @@ langchain-core = ">=0.3.0,<0.4.0"
 langchain-community = ">=0.3.0,<0.4.0"
 langgraph = ">=0.2.21"
 vertexai = ">=1.66.0"
+anthropic = {extras = ["vertexai"], version = ">=0.36.0,<1.0.0"}
 langchain-google-vertexai = ">=2.0.0"
-promptgit = {git = "git@github.com:tvaroska/promptgit.git"}
+promptgit = ">=0.2.0"
 google-cloud-storage = "^2.18.2"
 python-dateutil = ">=2.9.0"
 tqdm = "^4.66.5"
-
 [tool.poetry.group.dev.dependencies]
 jupyterlab = ">=4.2.4"
 ipywidgets = ">=8.1.3"
